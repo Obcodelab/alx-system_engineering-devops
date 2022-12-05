@@ -1,2 +1,2 @@
 #!/bin/bash
-ls -lt | sort head -n 10
+ls --format=single-column -t |head
