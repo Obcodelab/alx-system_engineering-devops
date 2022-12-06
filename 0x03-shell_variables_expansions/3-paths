@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "$(find "$PATH" -type d | wc -l)"
