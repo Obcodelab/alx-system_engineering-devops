@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "$(find "$@" -type d | wc -l)"
+ls -l $PATH | grep ^d | wc -l
