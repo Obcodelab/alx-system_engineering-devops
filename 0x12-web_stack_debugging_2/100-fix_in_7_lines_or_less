@@ -1,0 +1,7 @@
+#!/bin/bash
+
+useradd -r nginx
+sed -i 's/user\s*nginx;/user nginx nginx;/' /etc/nginx/nginx.conf
+service nginx restart
+ps auxff | grep "[n]ginx"
+nc -z 0 8080
