@@ -10,11 +10,16 @@ fi
 username="$1"
 
 # Check if the user exists on the system
-if ! id "$username" &>/dev/null; then
-  echo "User '$username' does not exist."
-  exit 1
+if id "$username" &>/dev/null; then
+  echo "User '$username' already exists."
+else
+  # Create the user with a home directory and add them to the sudo group
+  useradd -m -G sudo "$username"
+  echo "User '$username' has been created and added to the sudo group."
 fi
 
-# Switch to the specified user and run whoami
-sudo -u "$username" whoami
+# Modify sudoers file to allow members of the sudo group to use sudo without a password
+echo "%sudo   ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/sudo_group_no_password
 
+# Run the whoami command under the specified user using sudo
+sudo -u "$username" whoami
