@@ -1,28 +1,14 @@
 #!/bin/bash
 
-# Check if the script is being run as root
-if [ "$(id -u)" -ne 0 ]; then
-  echo "This script must be run as root."
-  exit 1
-fi
+# Step 1: Create the nginx user if it doesn't exist
+id -u nginx &>/dev/null || useradd -r nginx
 
-# Update the package manager and install Nginx with the 'nginx' user and 'www-data' group
-if command -v apt-get >/dev/null 2>&1; then
-  apt-get update
-  apt-get install nginx -y
-elif command -v yum >/dev/null 2>&1; then
-  yum update -y
-  yum install nginx -y
-else
-  echo "Unsupported package manager. Please install Nginx manually and configure it to run as the 'nginx' user."
-  exit 1
-fi
+# Step 2: Adjust Nginx configuration
+sed -i 's/user\s*nginx;/user nginx nginx;/' /etc/nginx/nginx.conf
 
-# Check if Nginx service exists and start it
-if command -v systemctl >/dev/null 2>&1; then
-  systemctl start nginx
-elif command -v service >/dev/null 2>&1; then
-  service nginx start
-else
-  echo "Unable to start Nginx service. Please start it manually."
-fi
+# Step 3: Restart Nginx to apply changes
+service nginx restart
+
+# Step 4: Check if Nginx is running as nginx user
+ps auxff | grep "[n]ginx"
+nc -z 0 8080
