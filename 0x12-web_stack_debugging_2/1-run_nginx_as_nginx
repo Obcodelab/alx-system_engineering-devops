@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Stop the Nginx service if it's running
+service nginx stop
+
+# Change the Nginx user to 'nginx' in the configuration
+sed -i 's/user\s*\(.*\);/user nginx;/' /etc/nginx/nginx.conf
+
+# Change the worker processes to the number of CPU cores available
+cpu_cores=$(nproc)
+sed -i "s/worker_processes\s*\(.*\);/worker_processes $cpu_cores;/" /etc/nginx/nginx.conf
+
+# Update the server block to listen on all active IPs on port 8080
+sed -i 's/listen\s*\(.*\)/listen 0.0.0.0:8080;/g' /etc/nginx/sites-available/default
+
+# Start the Nginx service
+service nginx start
