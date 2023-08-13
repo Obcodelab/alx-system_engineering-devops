@@ -5,32 +5,51 @@ Query Reddit API recursively for all hot articles of a given subreddit
 import requests
 
 
-def recurse(subreddit, hot_list=[], after="tmp"):
+def recurse(subreddit, hot_list=None, after=None):
     """
-        return all hot articles for a given subreddit
-        return None if invalid subreddit given
+    Fetches hot subreddit article titles via recursive Reddit API queries.
+
+    Args:
+        subreddit (str): The name of the subreddit to query.
+        hot_list (list, optional): Stores hot article titles. Default: None.
+        after (str, optional): Reddit API marker for navigation. Default: None.
+
+    Returns:
+        List or None: Holds hot article titles if valid subreddit; else, None.
     """
-    # get user agent
-    # https://stackoverflow.com/questions/10606133/ -->
-    # sending-user-agent-using-requests-library-in-python
-    headers = requests.utils.default_headers()
-    headers.update({'User-Agent': 'My User Agent 1.0'})
+    if hot_list is None:
+        hot_list = []
 
-    # update url each recursive call with param "after"
-    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
-    if after != "tmp":
-        url = url + "?after={}".format(after)
-    r = requests.get(url, headers=headers, allow_redirects=False)
+    base_url = f"https://www.reddit.com/r/{subreddit}/hot.json"
+    params = {"limit": 100, "after": after}
 
-    # append top titles to hot_list
-    results = r.json().get('data', {}).get('children', [])
-    if not results:
+    response = requests.get(
+        base_url, headers={"User-Agent": "YOUR_USER_AGENT"}, params=params
+    )
+
+    # Check if the subreddit is valid
+    if response.status_code == 404:
+        return None
+
+    data = response.json()
+
+    # Add titles to the hot_list
+    hot_list.extend([article["data"]["title"]
+                     for article in data["data"]["children"]])
+
+    # Check for pagination
+    if data["data"]["after"]:
+        return recurse(subreddit, hot_list, after=data["data"]["after"])
+    else:
         return hot_list
-    for e in results:
-        hot_list.append(e.get('data').get('title'))
 
-    # get next param "after" else nothing else to recurse
-    after = r.json().get('data').get('after')
-    if not after:
-        return hot_list
-    return (recurse(subreddit, hot_list, after))
+
+# Call the function with the subreddit name
+subreddit_name = "python"
+hot_titles = recurse(subreddit_name)
+
+if hot_titles is None:
+    print(f"Subreddit '{subreddit_name}' is not valid.")
+else:
+    for i, title in enumerate(hot_titles, start=1):
+        print(f"{i}. {title}")
